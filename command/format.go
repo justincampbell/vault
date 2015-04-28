@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/vault/api"
 	"github.com/mitchellh/cli"
@@ -14,6 +15,8 @@ func OutputSecret(ui cli.Ui, format string, secret *api.Secret) int {
 	switch format {
 	case "json":
 		return outputFormatJSON(ui, secret)
+	case "shell":
+		return outputFormatShell(ui, secret)
 	case "table":
 		fallthrough
 	default:
@@ -32,6 +35,17 @@ func outputFormatJSON(ui cli.Ui, s *api.Secret) int {
 	var out bytes.Buffer
 	json.Indent(&out, b, "", "\t")
 	ui.Output(out.String())
+	return 0
+}
+
+func outputFormatShell(ui cli.Ui, s *api.Secret) int {
+	input := []string{}
+
+	for k, v := range s.Data {
+		input = append(input, fmt.Sprintf("%s=%v", k, v))
+	}
+
+	ui.Output(strings.Join(input, "\n"))
 	return 0
 }
 
